@@ -1,5 +1,4 @@
 import type {Company} from "../types/company";
-import { getCompany} from "../Services/CompanyService";
 import {useState} from "react";
 
 type Props = {
@@ -13,7 +12,6 @@ type Props = {
 function CompanyCard({
     companies,onadd,onedit,ondelete}:Props){
     const [editCompanyId, setEditCompanyId] = useState<number | null>(null);
-    const [editcompany, setEditcompany] = useState<Company | null>(null);
     const [addform,setAddform] = useState<Company>({
         id:0,
         name:"",
@@ -41,22 +39,20 @@ function CompanyCard({
             jobs:[]
         })
     }
-     const handleEdit = (company:Company) => {
-        onedit(company);
+    const handleEdit = (company:Company) => {
+        setEditCompanyId(company.id);
         setEditform({
             id:company.id,
             name:company.name,
             email:company.email,
             phone:company.phone,
             location:company.location,
-            jobs:[]
+            jobs:company.jobs
         })
     }
-      const handleDelete = (id:number) => {
-        ondelete(id);
-    }
-    const handleSave = (id:number) => {
+    const handleSave = () => {
         onedit(editform);
+        setEditCompanyId(null);
         setEditform({
             id:0,
             name:"",
@@ -88,7 +84,7 @@ function CompanyCard({
                     <input type="text" value={editform.email} onChange={(e)=>setEditform({...editform,email:e.target.value})} placeholder={company.email} />
                     <input type="text" value={editform.phone} onChange={(e)=>setEditform({...editform,phone:e.target.value})} placeholder={company.phone} />
                     <input type="text" value={editform.location} onChange={(e)=>setEditform({...editform,location:e.target.value})} placeholder={company.location} />
-                    <button onClick={() => handleSave(company.id)}>Save</button>
+                    <button onClick={handleSave}>Save</button>
                     <button onClick={handlecancel}>Cancel</button>
                     </>
                     ):
@@ -97,9 +93,9 @@ function CompanyCard({
                     <p>Email: {company.email}</p>
                     <p>Phone: {company.phone}</p>
                     <p>Location: {company.location}</p>
-                    </>}
-                    <button onClick={() => setEditCompanyId(company.id)}>Edit</button>
+                    <button onClick={() => handleEdit(company)}>Edit</button>
                     <button onClick={() => ondelete(company.id)}>Delete</button>
+                    </>}
                     <hr></hr>
                 </div>
             ))}

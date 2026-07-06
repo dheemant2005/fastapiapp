@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "dev": "npm --prefix Backend/talentspark run dev",
+    "build": "npm --prefix Backend/talentspark run build",
+    "lint": "npm --prefix Backend/talentspark run lint"
+  },
   "dependencies": {
     "axios": "^1.18.1"
   }
