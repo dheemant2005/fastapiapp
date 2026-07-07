@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from database import get_db
 from utils.oauth2 import role_required,get_current_user
 
-
 router = APIRouter(prefix="/company",tags=["company"])
 
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=CompanyResponse)

@@ -17,7 +17,7 @@ qdrant = QdrantClient(
 
 )
 
-embeddings_model = TextEmbedding("BAAI/bge-small-en-v15")
+embeddings_model = TextEmbedding("BAAI/bge-small-en-v1.5")
 
 def ensure_collection():
     collections = [c.name for c in qdrant.get_collections().collections]
@@ -32,9 +32,9 @@ def ensure_collection():
             collection_name=COLLECTION_NAME,
             vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE)
         )        
-        def embed_text(text: str) -> list[float]:
+def embed_text(text: str) -> list[float]:
             return next(embeddings_model.embed([text])).tolist()
-        def embed_all_jobs(db: Session) -> int:
+def embed_all_jobs(db: Session) -> int:
             ensure_collection()
             jobs = db.query(Job).all()
             if not jobs:
@@ -52,10 +52,10 @@ def ensure_collection():
                     )
                 )
 
-        qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
-        return len(points)
+            qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
+            return len(points)
 
-    def search_jobs(query: str, top_k: int = 5) -> list[dict]:
+def search_jobs(query: str, top_k: int = 5) -> list[dict]:
         ensure_collection()
         query_vector = embed_text(query)
         results = qdrant.query_points(
@@ -73,7 +73,7 @@ def ensure_collection():
             }
             for point in results.points
         ]
-    def match_jobs_for_profile(skills: str, experience: str, top_k: int =5) -> list[dict]:
+def match_jobs_for_profile(skills: str, experience: str, top_k: int =5) -> list[dict]:
         ensure_collection()
         profile_text = f"Skills: {skills}, Experience: {experience}"
         profile_vector = embed_text(profile_text)

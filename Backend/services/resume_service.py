@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptsTemplate
+from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 llm = ChatGroq(
     model="llama-3.3-70b-verstaile",
@@ -9,7 +9,7 @@ llm = ChatGroq(
     temperature=0.3,
 
 )
-resume-prompt = ChatPromptTemplate.from_messages([
+resume_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are a professional resume analyser.
      Analyse theh given resume text and provide:
      1. Key Skills found
