@@ -8,5 +8,5 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed_password: str):
     return pwd_context.verify(password, hashed_password)
 
-def get_password_hash(pasword: str):
+def get_password_hash(password: str):
     return pwd_context.hash(password)

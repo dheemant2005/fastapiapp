@@ -1,6 +1,8 @@
 from fastapi import APIRouter,HTTPException,Depends,status
 from schemas.company import CompanyCreate, CompanyUpdate, CompanyResponse
 from models.company import Company
+from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -11,11 +13,35 @@ router = APIRouter(prefix="/company",tags=["company"])
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=CompanyResponse)
 async def create_company(company: CompanyCreate,db:AsyncSession=Depends(get_db),current_user=Depends(role_required(["admin"]))):
     try:
-        db_company=Company(**company.dict())
+        existing = await db.execute(
+            select(Company).filter(
+                or_(Company.email == company.email, Company.phone == company.phone)
+            )
+        )
+        if existing.scalars().first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A company with this email or phone already exists."
+            )
+
+        db_company = Company(**company.dict())
         db.add(db_company)
         await db.commit()
         await db.refresh(db_company)
-        return db_company
+        return CompanyResponse.model_validate({
+            "id": db_company.id,
+            "name": db_company.name,
+            "email": db_company.email,
+            "phone": db_company.phone,
+            "location": db_company.location,
+            "jobs": []
+        })
+    except HTTPException:
+        raise
+    except IntegrityError as e:
+        await db.rollback()
+        detail = "A company with this email or phone already exists."
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Database error creating company: {str(e)}")
@@ -24,7 +50,7 @@ async def create_company(company: CompanyCreate,db:AsyncSession=Depends(get_db),
 @router.get("/",status_code=status.HTTP_200_OK,response_model=list[CompanyResponse])
 async def get_all_company(db:AsyncSession=Depends(get_db),current_user=Depends(get_current_user)):
     try:
-        result = await db.execute(select(Company),options(selectinload(Company.jobs)))
+        result = await db.execute(select(Company).options(selectinload(Company.jobs)))
         companies = result.scalars().all()
         return companies
     except Exception as e:
@@ -33,7 +59,7 @@ async def get_all_company(db:AsyncSession=Depends(get_db),current_user=Depends(g
 @router.get("/{company_id}",status_code=status.HTTP_200_OK,response_model=CompanyResponse)
 async def get_company(company_id: int,db:AsyncSession=Depends(get_db),current_user=Depends(get_current_user)):
     try:
-        result = await db.execute(select(Company).filter(Company.id == company_id))
+        result = await db.execute(select(Company).options(selectinload(Company.jobs)).filter(Company.id == company_id))
         company = result.scalars().first()
         if not company:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
@@ -43,10 +69,10 @@ async def get_company(company_id: int,db:AsyncSession=Depends(get_db),current_us
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Database error retrieving company: {str(e)}")
 
-@router.put("/{company_id}",status_code=status.HTTP_201_CREATED)
+@router.put("/{company_id}",status_code=status.HTTP_200_OK,response_model=CompanyResponse)
 async def update_company(company_id: int, company: CompanyUpdate,db:AsyncSession=Depends(get_db),current_user=Depends(role_required(["admin"]))):
     try:
-        result = await db.execute(select(Company).filter(Company.id == company_id))
+        result = await db.execute(select(Company).options(selectinload(Company.jobs)).filter(Company.id == company_id))
         db_company = result.scalars().first()
         if not db_company:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")

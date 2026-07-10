@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { askCareerChat } from "../Services/ChatService";
+import { askCareerChat } from "../Services/Chatservice";
 import type { ChatMessage } from "../types/chat";
 
 function Chat() {

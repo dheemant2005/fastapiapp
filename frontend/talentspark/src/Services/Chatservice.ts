@@ -1,4 +1,4 @@
-import api from "./Api";
+import api from "./api";
 import type { ChatResponse } from "../types/chat";
 
 export async function askChat(message: string): Promise<string> {

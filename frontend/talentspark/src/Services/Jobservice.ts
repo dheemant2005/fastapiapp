@@ -1,4 +1,4 @@
-import api from "./Api"
+import api from "./api"
 import type { Job } from "../types/job"
 
 export async function getJobs(): Promise<Job[]> {

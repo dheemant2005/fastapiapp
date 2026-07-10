@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {login} from "../Services/AuthService";
+import { login } from "../Services/Authservice";
 
 type Props = {
     onLogin: (token: string) => void;
