@@ -12,7 +12,7 @@ from utils.token import create_access_token
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserResponse)
-async def register_user(user: UserCreate, db: Session = Depends(get_db)):
+async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     try:
         result  = await db.execute(select(User).filter(User.email == user.email))
         existing_user = result.scalars().first()
